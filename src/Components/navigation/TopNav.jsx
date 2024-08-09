@@ -1,20 +1,33 @@
-import Button from 'react-bootstrap/Button';
-import Container from 'react-bootstrap/Container';
-import Form from 'react-bootstrap/Form';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
-import Offcanvas from 'react-bootstrap/Offcanvas';
+import React, { useEffect, useState } from 'react';
+import { Navbar, Container, Nav, NavDropdown, Offcanvas } from 'react-bootstrap';
 import { FaBars } from 'react-icons/fa';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 function TopNav() {
     let expand = "md";
+
+
+    const [navbarBg, setNavbarBg] = useState(false);
+    const handleScroll = () => {
+        if (window.scrollY > 800) {
+            setNavbarBg(true); // Change to the desired background color
+        } else {
+            setNavbarBg(false);
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
     return (
         <div>
-            <Navbar key={expand} expand={expand} className="bg-body-tertiary mb-3">
+            <Navbar key={expand} expand={expand} className={`${navbarBg ? "bg-light" : "bg-transparent"} bg-body-tertiary mb-3`} fixed="top" style={{ width: '100%', zIndex: 100 }}>
                 <Container fluid>
-                    <Navbar.Brand href="#">Navbar Offcanvas</Navbar.Brand>
-                    <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand} border-none`}>
+                    <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand}`} className="border-0">
                         <FaBars />
                     </Navbar.Toggle>
                     <Navbar.Offcanvas
@@ -24,36 +37,26 @@ function TopNav() {
                     >
                         <Offcanvas.Header closeButton>
                             <Offcanvas.Title id={`offcanvasNavbarLabel-expand-${expand}`}>
-                                Offcanvas
+                                <Navbar.Brand as={NavLink} to="/">FLATALLY</Navbar.Brand>
                             </Offcanvas.Title>
                         </Offcanvas.Header>
                         <Offcanvas.Body>
-                            <Nav className="justify-content-end flex-grow-1 pe-3">
-                                <Nav.Link href="#action1">Home</Nav.Link>
-                                <Nav.Link href="#action2">Link</Nav.Link>
+                            <Nav className="justify-content-start justify-content-md-between align-items-start align-items-md-center w-100 CustomPadding">
+                                <NavLink to="/" className="nav-link">Home</NavLink>
+                                <NavLink to="/About" className="nav-link">About</NavLink>
+                                <NavLink to="/" className="nav-link d-none d-md-block">
+                                    <Navbar.Brand href="#">FLATALLY</Navbar.Brand>
+                                </NavLink>
                                 <NavDropdown
-                                    title="Dropdown"
+                                    title="Areas"
                                     id={`offcanvasNavbarDropdown-expand-${expand}`}
                                 >
-                                    <NavDropdown.Item href="#action3">Action</NavDropdown.Item>
-                                    <NavDropdown.Item href="#action4">
-                                        Another action
-                                    </NavDropdown.Item>
-                                    <NavDropdown.Divider />
-                                    <NavDropdown.Item href="#action5">
-                                        Something else here
-                                    </NavDropdown.Item>
+                                    <NavDropdown.Item as={NavLink} to="/">Camden Town</NavDropdown.Item>
+                                    <NavDropdown.Item as={NavLink} to="/notting-hill">Notting Hill</NavDropdown.Item>
+                                    <NavDropdown.Item as={NavLink} to="/peckham">Peckham</NavDropdown.Item>
                                 </NavDropdown>
+                                <Nav.Link as={NavLink} to="/contact">Contact</Nav.Link>
                             </Nav>
-                            <Form className="d-flex">
-                                <Form.Control
-                                    type="search"
-                                    placeholder="Search"
-                                    className="me-2"
-                                    aria-label="Search"
-                                />
-                                <Button variant="outline-success">Search</Button>
-                            </Form>
                         </Offcanvas.Body>
                     </Navbar.Offcanvas>
                 </Container>

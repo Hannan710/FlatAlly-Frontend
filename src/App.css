@@ -9,6 +9,7 @@
   --PrimaryColorHover: rgb(145, 114, 66);
 
   --SecondaryColor: rgb(23, 23, 23);
+  --SecondaryColorV2: rgb(26, 25, 25);
   --SecondaryColorHover: rgb(145, 114, 66);
 
   --CardBackground: rgb(252, 244, 232);
@@ -29,7 +30,9 @@ h6 {
 }
 p,
 label,
-button,option,input {
+button,
+option,
+input {
   font-family: "Source Sans 3", sans-serif;
 }
 
@@ -157,7 +160,7 @@ button,option,input {
 
 .primaryOutline {
   color: var(--textGoldenColor);
-  background-color: var(--SecondaryColor);
+  background-color: inherit;
   border: 0.5px solid var(--PrimaryColor);
   border-radius: 0%;
   &&:is(:hover, :focus, :active) {
@@ -177,7 +180,6 @@ button,option,input {
 }
 
 .BigBtn {
-  min-height: 6rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -189,24 +191,49 @@ button,option,input {
 }
 
 .darkMode {
-  background-color: var(--SecondaryColor);
+  background-color: var(--SecondaryColorV2);
 }
 
 .customInput {
   box-shadow: none;
   color: var(--textGoldenColor);
-  background-color: var(--SecondaryColor);
+  background-color: inherit;
   border: 0.5px solid var(--PrimaryColor);
   border-radius: 0%;
   &&:is(:hover, :focus, :active) {
     box-shadow: none;
     border: 0.5px solid var(--PrimaryColor);
     color: var(--textGoldenColor);
-    background-color: var(--SecondaryColor);
+    background-color: inherit;
   }
   &&::placeholder {
     color: var(--PrimaryColorHover);
   }
+}
+
+.customInputWhite {
+  box-shadow: none;
+  color: var(--textWhiteColor);
+  background-color: inherit;
+  border: 0.5px solid var(--textWhiteColor);
+  border-radius: 0%;
+  &&:is(:hover, :focus, :active) {
+    box-shadow: none;
+    border: 0.5px solid var(--textWhiteColor);
+    color: var(--textWhiteColor);
+    background-color: inherit;
+  }
+  &&::placeholder {
+    color: var(--textWhiteColor);
+  }
+}
+.customInputWhite option {
+  color: var(
+    --textBlackColor
+  ); /* Set this to a color that contrasts with the background */
+  background-color: var(
+    --textWhiteColor
+  ); /* Ensure this provides enough contrast */
 }
 
 /* Custom checkbox styles */
@@ -282,4 +309,138 @@ button,option,input {
 
 .custom-radio .form-check-input:checked {
   border-color: goldenrod;
+}
+
+.bg-transparent {
+  background-color: transparent !important;
+  backdrop-filter: blur(10px);
+}
+
+.bg-body-tertiary {
+  /* background-color: unset !important; */
+  /* backdrop-filter: blur(10px); */
+  color: var(--textWhiteColor) !important;
+}
+
+.bg-body-tertiary a {
+  color: var(--textWhiteColor) !important;
+  mix-blend-mode: difference;
+  font-family: "Libre Baskerville", serif;
+}
+
+.FooterBlock a {
+  color: var(--textWhiteColor) !important;
+  &&:hover {
+    color: var(--PrimaryColor) !important;
+    margin: 0px 0px 0px 10px;
+  }
+  transition: all 0.3s ease-in;
+  position: relative;
+}
+.FooterBlock a:hover::after {
+  content: "";
+  top: 8px;
+  right: calc(100% + 5px);
+  position: absolute;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  background-color: var(--PrimaryColor);
+}
+
+.CustomPadding {
+  padding: 0px 15rem;
+}
+
+@media (max-width: 768px) {
+  .CustomPadding {
+    padding: 0px 0px;
+  }
+}
+
+.blurBackdrop {
+  backdrop-filter: blur(50px);
+  backdrop-filter: blur(10px);
+  color: var(--textWhiteColor) !important;
+}
+
+.textGolden {
+  color: var(--PrimaryColor);
+}
+
+.bg-Golden {
+  background-color: rgba(181, 142, 83, 0.272);
+}
+
+.review-card {
+  padding-top: 32px;
+  text-align: center;
+  position: relative;
+  margin: 20px;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.avatar-container {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.review-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  height: 60px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.imgObject {
+  width: 100vw;
+  height: 100%;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+.GeneralDividers {
+  border-left: 1px solid #fff;
+  height: 7rem;
+  margin-top: 25px;
+}
+.GeneralInputBlock {
+  height: 10rem;
+  width: 33.3%;
+}
+.GeneralFormLocation {
+  min-height: 10rem;
+  margin-top: -15rem;
+}
+
+@media only screen and (max-width: 761px) {
+  .GeneralDividers {
+    border-top: 1px solid #fff;
+    border-left: 0px;
+    height: 1rem;
+    width: 90%;
+    margin-top: 25px;
+  }
+  .GeneralInputBlock {
+    height: 100%;
+    width: 100%;
+  }
+  .GeneralFormLocation {
+    min-height: 5rem;
+    margin-top: 0;
+  }
 }
