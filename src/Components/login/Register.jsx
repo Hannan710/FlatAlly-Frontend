@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from "react-router-dom";
-
+import Select from 'react-select';
 
 
 // import { ToastContainer, toast } from 'react-toastify';
@@ -13,20 +13,21 @@ import * as Yup from 'yup';
 import { Card, ConfigProvider, Spin, Steps } from 'antd';
 
 import sampleImage from "../../assets/Svgs/Connected world-pana.svg";
-import sampleImage2 from "../../assets/Svgs/Conversation-pana.svg";
+import sampleImage2 from "../../assets/Svgs/profile-user-svgrepo-com.svg";
 
 import FarmSVG from "../../assets/Svgs/Remote team-pana.svg"
 import { Form, Image, InputGroup } from 'react-bootstrap';
 import { useRecoilState, useRecoilValue } from 'recoil';
 
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { defaultApiUrl, LoggedInUserData, PoultryFarmState } from '../../Atom';
+import { defaultApiUrl, LoggedInUserData, LoggedInUserTokenJwt, PreferenceState } from '../../Atom';
 
 const Register = () => {
     var navigate = useNavigate();
 
     let [loggedUser, setLoggedUser] = useRecoilState(LoggedInUserData)
-    let [poultryFarm, setPoultryFarm] = useRecoilState(PoultryFarmState);
+    let [loggedUserToken, setLoggedUserToken] = useRecoilState(LoggedInUserTokenJwt)
+    let [preferenceObj, setPreferenceObj] = useRecoilState(PreferenceState);
 
     let defaultApi = useRecoilValue(defaultApiUrl);
 
@@ -44,16 +45,16 @@ const Register = () => {
 
     const formik = useFormik({
         initialValues: {
-            "id": 1,
             "userName": "",
             "password": "",
             "CPassword": "",
             "email": "",
             "phoneNumber": "",
-            "CNIC": "",
             "address": "",
             "accountType": "Owner",
-            "imageUrl": ""
+            "imageUrl": "",
+            "gender": "",
+            "area": "",
         },
 
 
@@ -64,17 +65,16 @@ const Register = () => {
             // console.log(values);
 
             let mydata = {
-                email: values.email,
-                password: values.password,
                 userName: values.userName,
+                password: values.password,
+                email: values.email,
                 phoneNumber: values.phoneNumber,
-                CNIC: values.CNIC,
                 address: values.address,
                 accountType: values.accountType,
-                imageUrl: values.imageUrl
+                imageUrl: values.imageUrl,
+                gender: values.gender,
+                area: values.area,
             }
-
-            console.log(mydata);
 
             setLoggedUser(mydata);
             setProceed(true);
@@ -99,17 +99,22 @@ const Register = () => {
 
             phoneNumber: Yup.string()
                 .trim()
-                .matches(/^03\d{9}$/, 'Enter  11 digit phone Number eg: 03XXXXXXXXX') // Validate phone number format (adjust as needed)
+                .matches(/^\+44\d{2}\d{4}\d{4}$/, 'Enter  13 digit phone Number eg: +44XXXXXXXXXX ') // Validate phone number format (adjust as needed)
                 .required('Phone number is required'),
         })
     })
 
     const formik2 = useFormik({
         initialValues: {
+            // "userName": "",
+            // "password": "",
             "email": "",
-            "CNIC": "",
+            // "phoneNumber": "",
             "address": "",
-            "imageUrl": ""
+            "accountType": "",
+            "imageUrl": "",
+            "gender": "Male",
+            "area": "",
         },
 
         onSubmit: async (values, action) => {
@@ -120,15 +125,16 @@ const Register = () => {
 
                 let myData = {
                     email: values.email,
-                    CNIC: values.CNIC,
                     address: values.address,
+                    accountType: values.accountType,
                     imageUrl: values.imageUrl,
+                    gender: values.gender,
+                    area: values.area,
 
                     // previous Object
-                    accountType: loggedUser.accountType,
-                    password: loggedUser.password,
-                    phoneNumber: loggedUser.phoneNumber,
-                    userName: loggedUser.userName,
+                    password: loggedUser.userName,
+                    phoneNumber: loggedUser.password,
+                    userName: loggedUser.phoneNumber,
                 }
 
                 console.log(JSON.stringify(myData));
@@ -138,8 +144,8 @@ const Register = () => {
 
                 // Add each key-value pair from myData to the FormData
                 formData.append('email', values.email);
-                formData.append('CNIC', values.CNIC);
                 formData.append('address', values.address);
+                formData.append('accountType', values.accountType);
 
                 // Handle imageUrl separately (assuming it's a file object)
 
@@ -155,31 +161,22 @@ const Register = () => {
                 }
 
                 // Add remaining properties (optional, adjust as needed)
-                formData.append('accountType', loggedUser.accountType);
+                formData.append('gender', values.gender);
+                formData.append('area', values.area);
                 formData.append('password', loggedUser.password);
                 formData.append('phoneNumber', loggedUser.phoneNumber);
                 formData.append('userName', loggedUser.userName);
 
 
 
-                axios.post(defaultApi + '/api/userRegistration/add', formData).then((req) => {
+                axios.post(defaultApi + '/api/Register/add', formData).then((req) => {
                     console.log(req.data);
-                    // toast.success("User Registered Successfully", {
-                    //     position: "top-center",
-                    //     autoClose: 1000,
-                    //     hideProgressBar: false,
-                    //     closeOnClick: true,
-                    //     pauseOnHover: true,
-                    //     draggable: true,
-                    //     progress: undefined,
-                    //     theme: "light",
-                    // });
                     setLoad(false);
                     setCurrent(current + 1);
                     setUserCreatedFlag(false);
-                    setLoggedUser(req.data);
+                    setLoggedUserToken(req.data);
 
-                    sessionStorage.setItem('UserData', JSON.stringify(req.data))
+                    sessionStorage.setItem('UserToken', JSON.stringify(req.data))
                     sessionStorage.setItem("loggedIn", true);
                     sessionStorage.setItem("UserName", loggedUser.userName);
 
@@ -187,16 +184,7 @@ const Register = () => {
                     console.error(error.response);
                     if (error.response.status === 400) {
                         if (error.response.data === "User already exists.") {
-                            // toast.error("You are already Registered try with other account...", {
-                            //     position: "top-center",
-                            //     autoClose: 1000,
-                            //     hideProgressBar: false,
-                            //     closeOnClick: true,
-                            //     pauseOnHover: true,
-                            //     draggable: true,
-                            //     progress: undefined,
-                            //     theme: "light",
-                            // });
+                            console.log("User Already Exists")
                         }
                         else {
                             console.log(error.response.data);
@@ -217,16 +205,16 @@ const Register = () => {
             email: Yup.string()
                 .email('Invalid email format')
                 .required('Required'),
-            CNIC: Yup.string()
-                .trim()
-                // .matches(/^\d{5}-\d{7}-\d{1}$/, 'Phone number must be numeric') // Validate phone number format (adjust as needed)
-                .matches(/^\d{13}$/, 'Enter 13 digit CNIC number without dashes "-"') // Validate phone number format (adjust as needed)
-                .required('CNIC number is required'),
             address: Yup.string()
+                .required('Required'),
+            accountType: Yup.string()
+                .required('Required'),
+            gender: Yup.string()
+                .required('Required'),
+            area: Yup.string()
                 .required('Required'),
         })
     })
-
     // Assuming sampleImage2 is the path to the image file
     const getImageFile = async (imageUrl) => {
         try {
@@ -242,38 +230,35 @@ const Register = () => {
 
     const formik3 = useFormik({
         initialValues: {
-            user_FK: "",
-            name: "",
-            // area: "",
-            ownerShipStatus: "",
-            rentAmount: "",
-            address: "",
-            chicksCapacity: "",
-            numberOfSheds: "",
-            branch: "1",
-            phoneNumber: "",
-            // email: ""
+            Gender_Preferences: "Other", //select
+            Religion_Preferences: "", //text
+            // Country_Preferences: "", //text
+            Vegan_NonVegan_Preference: 'Non-Vegan', //radio
+            // GrocerySharing_Preferences: "", //bool
+            WorkStatus_Preferences: "Other", //select
+            Alcohol_Preferences: "No Preference", //Select
+            Smoking_Preferences: false, //bool
+            Noise_Preferences: "Moderate", //select
+            // Pet_Preferences: "", //text
+            Age_Preferences: {
+                min: 18,
+                max: 99
+            }, //number
         },
 
 
 
         onSubmit: (values, action) => {
-
+            console.log(values)
             let myData = {
-                user_FK: loggedUser._id,
-                name: values.name,
-                // area: values.area,
-                ownerShipStatus: values.ownerShipStatus,
-                rentAmount: values.rentAmount,
-
-                address: values.address,
-                branch: values.branch,
-                phoneNumber: values.phoneNumber,
-                // email: values.email
-
-                chicksCapacity: values.chicksCapacity,
-                numberOfSheds: values.numberOfSheds,
-
+                Gender_Preferences: values.Gender_Preferences,
+                Religion_Preferences: values.Religion_Preferences,
+                Vegan_NonVegan_Preference: values.Vegan_NonVegan_Preference,
+                WorkStatus_Preferences: values.WorkStatus_Preferences,
+                Alcohol_Preferences: values.Alcohol_Preferences,
+                Smoking_Preferences: values.Smoking_Preferences,
+                Noise_Preferences: values.Noise_Preferences,
+                Age_Preferences: values.Age_Preferences,
             }
 
             console.log(JSON.stringify(myData));
@@ -283,82 +268,68 @@ const Register = () => {
 
             /* issue needed to handle in Backend api is just filtering on base on branch not Corresponding branch of user which
             will create issues later */
-            axios.post(defaultApi + '/api/poultryFarm/Add', myData).then((res) => {
-                console.log(res.data)
-
-                // toast.success("User poultry farm is created", {
-                //     position: "top-center",
-                //     autoClose: 1000,
-                //     hideProgressBar: false,
-                //     closeOnClick: true,
-                //     pauseOnHover: true,
-                //     draggable: true,
-                //     progress: undefined,
-                //     theme: "light",
-                // });
-
-                setPoultryFarm([res.data]);
-                navigate("/")
-
-            }).catch((err) => {
-                console.log(err)
-                console.error(err.response);
-                if (err.response.status === 400) {
-                    // toast.error("Something went wrong please try again later ... ", {
-                    //     position: "top-center",
-                    //     autoClose: 1000,
-                    //     hideProgressBar: false,
-                    //     closeOnClick: true,
-                    //     pauseOnHover: true,
-                    //     draggable: true,
-                    //     progress: undefined,
-                    //     theme: "light",
-                    // });
+            axios.post(defaultApi + '/api/Preferences/Add', myData, {
+                headers: {
+                    'Authorization': `Bearer ${loggedUserToken.accessToken}`,
+                    'Content-Type': 'application/json' // Optional, specify if you are sending JSON data
                 }
             })
+                .then((res) => {
+                    console.log(res.data);
+                    setPreferenceObj(res.data);
+                    navigate("/Search");
+                })
+                .catch((err) => {
+                    console.log(err);
+                    console.error(err.response);
+                    if (err.response.status === 400) {
+                        // Handle 400 error here
+                    }
+                });
+
 
             // navigate("/")
 
 
         },
 
-        validationSchema: Yup.object({
-
-            address: Yup.string().required(),
-
-            chicksCapacity: Yup.string().required("Chicks capacity is Required"),
-            numberOfSheds: Yup.string().required("Number of Sheds is Required"),
-
-            ownerShipStatus: Yup.string().required('Ownership status is required'),
-
-            rentAmount: Yup.string()
-                .when('ownerShipStatus', {
-                    is: 'rented',
-                    then: Yup.string().required('Rent amount is required for rented properties'),
-                })
-                .notRequired(), // Optional: Default required message
-
-            name: Yup.string()
-                .trim() // Remove leading/trailing whitespace
-                .required('Poultry Farm Name  is required'),
-            phoneNumber: Yup.string()
-                .trim()
-                .matches(/^03\d{9}$/, 'Enter  11 digit phone Number eg: 03XXXXXXXXX')// Validate phone number format (adjust as needed)
-                .required('Phone number is required'),
-
+        validationSchema: Yup.object().shape({
+            Gender_Preferences: Yup.string()
+                .oneOf(['Male', 'Female', 'Other'], 'Invalid gender preference')
+                .default('Other'),
+            Religion_Preferences: Yup.string()
+                .default(''),
+            // Country_Preferences: Yup.array()
+            //     .of(Yup.string())
+            //     .default([]),
+            Vegan_NonVegan_Preference: Yup.string()
+                .oneOf(['Vegan', 'Non-Vegan'], 'Invalid vegan preference')
+                .default('Non-Vegan'),
+            WorkStatus_Preferences: Yup.array()
+                .of(Yup.string().oneOf(['Student', 'Employed fullTime', 'Employed PartTime', 'Unemployed', 'Other'], 'Invalid work status'))
+                .default(['Other']),
+            Alcohol_Preferences: Yup.string()
+                .oneOf(['No Preference', 'Social Drinker', 'Non-Drinker', 'Occasional'], 'Invalid alcohol preference')
+                .default('No Preference'),
+            Smoking_Preferences: Yup.boolean()
+                .default(false),
+            Noise_Preferences: Yup.string()
+                .oneOf(['Quiet', 'Moderate', 'Loud'], 'Invalid noise preference')
+                .default('Moderate'),
+            Age_Preferences: Yup.object().shape({
+                min: Yup.number()
+                    .min(0, 'Minimum age must be at least 0')
+                    .max(150, 'Minimum age cannot be more than 150')
+                    .default(18),
+                max: Yup.number()
+                    .min(Yup.ref('min'), 'Maximum age must be greater than or equal to minimum age')
+                    .max(150, 'Maximum age cannot be more than 150')
+                    .default(99)
+            })
         })
     })
 
     const [current, setCurrent] = useState(1);
-
-    // Customize the theme here if needed
-    const customTheme = {
-        token: {
-            colorPrimary: '#488a99', // Use the primary color from the theme or default to #488a99
-        }
-        // Add more theme customizations if needed
-    };
-
 
     const handleImageChange = (event) => {
         const selectedFile = event.target.files[0];
@@ -372,6 +343,13 @@ const Register = () => {
         setPreviewImage(URL.createObjectURL(selectedFile)); // Update preview image
     };
 
+    const options = [
+        { value: 'Student', label: 'Student' },
+        { value: 'Employed fullTime', label: 'Employed fullTime' },
+        { value: 'Employed PartTime', label: 'Employed PartTime' },
+        { value: 'Unemployed', label: 'Unemployed' },
+        { value: 'Other', label: 'Other' }
+    ];
 
     return (
         <div className='container-fluid'>
@@ -380,10 +358,10 @@ const Register = () => {
                     <Card className='shadow' data-aos="flip-left" data-aos-duration="800">
                         {!proceed &&
                             <div className="row align-items-stretch ">
-                                <div className="col-md-6 order-2">
+                                <div className="col-md-6 order-md-2 order-1 d-flex justify-content-center align-items-center">
                                     <Image src={FarmSVG} alt='Farm SVG' fluid className='w-100' />
                                 </div>
-                                <div className="col-md-6 order-1">
+                                <div className="col-md-6 order-2 order-md-1">
                                     <div className='d-flex w-100 h-100 justify-content-center align-items-center'>
                                         <form className='w-100' onSubmit={formik.handleSubmit}>
                                             <div className='row mt-2'>
@@ -405,7 +383,7 @@ const Register = () => {
                                                 <div className='col-md-10'>
                                                     <label htmlFor='phoneNumber'>Phone</label>
 
-                                                    <input autoComplete='off' className='form-control' type="string" id='phoneNumber' placeholder="03XXXXXXXXX" name="phoneNumber"
+                                                    <input autoComplete='off' className='form-control' type="string" id='phoneNumber' placeholder="+44XXXXXXXXXX" name="phoneNumber"
                                                         onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.phoneNumber} />
                                                     {formik.touched.phoneNumber && formik.errors.phoneNumber ? <div className='text-danger'>{formik.errors.phoneNumber}</div> : null}
                                                 </div>
@@ -461,18 +439,18 @@ const Register = () => {
                         {proceed && <div className="row justify-content-center ">
 
                             <div className='col-md-10'>
-                                <div className='row mt-2 mb-4'>
+                                <div className='row mt-2 mb-md-4'>
                                     <div className='col-md-12 text-center'>
                                         {current === 1 &&
                                             <h3><b>Your Address</b></h3>
                                         }
                                         {current === 2 &&
-                                            <h3><b>Add Your Poultry Farm</b></h3>
+                                            <h3><b>Add Preferences</b></h3>
                                         }
 
                                     </div>
                                 </div>
-                                <ConfigProvider theme={customTheme}>
+                                <div className=' d-none d-md-block'>
                                     <Steps
                                         responsive={true}
                                         current={current}
@@ -488,29 +466,29 @@ const Register = () => {
                                             },
                                             {
                                                 title: 'Step 3',
-                                                description: "Add Poultry Farm",
+                                                description: "Add Preferences",
                                             },
                                         ]}
                                     />
-                                </ConfigProvider>
+                                </div>
                             </div>
 
                             {!load &&
-                                <div className='col-md-10 mt-4'>
+                                <div className='col-md-10 mt-md-4'>
 
                                     {current === 1 &&
                                         <div className='row mt-2 justify-content-center align-items-start RegisterAddressBlock'>
-                                            <div className='col-md-12 mb-3 d-none'>
+                                            <div className='col-md-2  mb-3 '>
                                                 <div className='row justify-content-center'>
-                                                    <div className='col-md-3 px-5 px-md-0'>
-                                                        <label for="imageUrl" className='curserPointer px-5 px-md-0'  >
-                                                            {previewImage ? (
-                                                                <Image fluid src={previewImage} roundedCircle className='w-100 px-5 px-md-4 ' />
-                                                            ) : (
-                                                                <Image fluid src={sampleImage} roundedCircle className='w-100 px-5 px-md-4' /> // Fallback image
-                                                            )}
-                                                        </label>
-                                                        <label for="imageUrl" className="text-center h5 w-100 fw-bold curserPointer">Profile Pic</label>
+                                                    <label for="imageUrl" className='curserPointer text-center px-5 mt-2 px-md-0'  >
+                                                        {previewImage ? (
+                                                            <Image fluid src={previewImage} roundedCircle className='ProfileImgSize' />
+                                                        ) : (
+                                                            <Image fluid src={sampleImage2} roundedCircle className='ProfileImgSize' /> // Fallback image
+                                                        )}
+                                                    </label>
+                                                    <div className='col-md-12 px-5 px-md-0'>
+                                                        <label for="imageUrl" className="text-center h5 w-100 fw-bold curserPointer  mt-3">Profile Pic</label>
                                                         <input
                                                             autoComplete='off'
                                                             className='form-control d-none'
@@ -525,21 +503,42 @@ const Register = () => {
                                                 </div>
                                             </div>
 
-                                            <div className='col-md-6 '>
+
+                                            <div className='col-md-5'>
                                                 <label htmlFor='email'>Email</label>
                                                 <input autoComplete='off' className='form-control' type="string" id='email' placeholder="example@gmail.com" name="email"
                                                     onChange={formik2.handleChange} onBlur={formik2.handleBlur} value={formik2.values.email} />
                                                 {formik2.touched.email && formik2.errors.email ? <div className='text-danger'>{formik2.errors.email}</div> : null}
+                                                <label htmlFor='accountType' className='mt-3'>Seeking or providing accommodation?</label>
+                                                <select autoComplete='off'
+                                                    className='form-select'
+                                                    type="string" id='accountType' name="accountType"
+                                                    onChange={formik2.handleChange} onBlur={formik2.handleBlur} value={formik2.values.accountType} >
+                                                    <option value="seeking">Seeking</option>
+                                                    <option value="providing">Providing</option>
+                                                </select>
+                                                {formik2.touched.accountType && formik2.errors.accountType ? <div className='text-danger'>{formik2.errors.accountType}</div> : null}
+
                                             </div>
 
-                                            <div className='col-md-6 mt-2 mt-md-0'>
-                                                <label htmlFor='CNIC'>CNIC</label>
-                                                <input autoComplete='off' className='form-control' type="string" id='CNIC' placeholder="3520147812311" name="CNIC"
-                                                    onChange={formik2.handleChange} onBlur={formik2.handleBlur} value={formik2.values.CNIC} />
-                                                {formik2.touched.CNIC && formik2.errors.CNIC ? <div className='text-danger'>{formik2.errors.CNIC}</div> : null}
+                                            <div className='col-md-5 mt-2 mt-md-0'>
+                                                <label htmlFor='gender'>Gender</label>
+                                                <select autoComplete='off'
+                                                    className='form-select'
+                                                    type="string" id='gender' name="gender"
+                                                    onChange={formik2.handleChange} onBlur={formik2.handleBlur} value={formik2.values.gender} >
+                                                    <option value={"Male"}>Male</option>
+                                                    <option value={"Female"}>Female</option>
+                                                </select>
+                                                {formik2.touched.gender && formik2.errors.gender ? <div className='text-danger'>{formik2.errors.gender}</div> : null}
+                                                <label htmlFor='area' className='mt-3'>Area</label>
+                                                <input autoComplete='off' className='form-control' type="text" id='area' placeholder="Enter your area name" name="area"
+                                                    onChange={formik2.handleChange} onBlur={formik2.handleBlur} value={formik2.values.area} />
+                                                {formik2.touched.area && formik2.errors.area ? <div className='text-danger'>{formik2.errors.area}</div> : null}
                                             </div>
 
-                                            <div className='col-md-12 mt-2'>
+
+                                            <div className='col-md-12 '>
                                                 <label htmlFor='address'>Address</label>
                                                 <textarea rows="2" cols="3" autoComplete='off' className='form-control' type="string" id='address' placeholder="address" name="address"
                                                     onChange={formik2.handleChange} onBlur={formik2.handleBlur} value={formik2.values.address} />
@@ -550,71 +549,162 @@ const Register = () => {
                                     {current === 2 &&
                                         <div className='row mb-4 justify-content-center'>
                                             <div className='col-md-6 mt-2'>
-                                                <label htmlFor='name'>Name</label>
-                                                <input autoComplete='off' className='form-control' type="string" id='name' placeholder="Usama's Farm" name="name"
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.name} />
-                                                {formik3.touched.name && formik3.errors.name ? <div className='text-danger'>{formik3.errors.name}</div> : null}
+                                                <label htmlFor='Gender_Preferences'>Gender Preferences</label>
+                                                <select autoComplete='off'
+                                                    className='form-select' type="text"
+                                                    id='Gender_Preferences' name="Gender_Preferences"
+                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.Gender_Preferences} >
+                                                    <option value={"Male"}>Male</option>
+                                                    <option value={"Female"}>Female</option>
+                                                    <option value={"Other"}>Other</option>
+                                                </select>
+                                                {formik3.touched.Gender_Preferences && formik3.errors.Gender_Preferences ? <div className='text-danger'>{formik3.errors.Gender_Preferences}</div> : null}
                                             </div>
 
 
                                             <div className='col-md-6 mt-2'>
-                                                <label htmlFor='ownerShipStatus'>Status</label>
-                                                <select autoComplete='off' className='form-select' type="string" id='ownerShipStatus' name="ownerShipStatus"
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.ownerShipStatus} >
-                                                    <option value={""}>Select</option>
-                                                    <option value={"Owner"}>Owner</option>
-                                                    <option value={"rented"}>Rented</option>
-                                                </select>
-                                                {formik3.touched.ownerShipStatus && formik3.errors.ownerShipStatus ? <div className='text-danger'>{formik3.errors.ownerShipStatus}</div> : null}
+                                                <label htmlFor='Religion_Preferences'>Religion Preferences</label>
+                                                <input autoComplete='off' className='form-control' type="text" id='Religion_Preferences' placeholder="Enter Religion Preferences" name="Religion_Preferences"
+                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.Religion_Preferences} />
+                                                {formik3.touched.Religion_Preferences && formik3.errors.Religion_Preferences ? <div className='text-danger'>{formik3.errors.Religion_Preferences}</div> : null}
                                             </div>
 
-                                            {formik3.values.ownerShipStatus === "rented" &&
-                                                <div className='col-md-6 mt-2'>
-                                                    <label htmlFor='rentAmount'>Rent Amount</label>
-                                                    <input autoComplete='off' className='form-control' type="string" id='rentAmount' placeholder="Enter Amount" name="rentAmount"
-                                                        onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.rentAmount} />
-                                                    {formik3.touched.rentAmount && formik3.errors.rentAmount ? <div className='text-danger'>{formik3.errors.rentAmount}</div> : null}
+                                            <div className={`col-md-6 mt-2`}>
+                                                <label htmlFor='Vegan_NonVegan_Preference'>Food Preference</label>
+
+                                                <div className="preference-container">
+                                                    <div
+                                                        className={`preference-box ${formik3.values.Vegan_NonVegan_Preference === "Vegan" ? "selected" : ""}`}
+                                                        onClick={() => formik3.setFieldValue('Vegan_NonVegan_Preference', 'Vegan')}
+                                                    >
+                                                        Vegan
+                                                    </div>
+                                                    <div
+                                                        className={`preference-box ${formik3.values.Vegan_NonVegan_Preference === "Non-Vegan" ? "selected" : ""}`}
+                                                        onClick={() => formik3.setFieldValue('Vegan_NonVegan_Preference', 'Non-Vegan')}
+                                                    >
+                                                        Non-Vegan
+                                                    </div>
                                                 </div>
 
-                                            }
-
-
-                                            <div className={` ${formik3.values.ownerShipStatus === "rented" ? "col-md-6" : "col-md-12"}   mt-2`}>
-                                                <label htmlFor='branchName'>Branch Name</label>
-
-                                                <input autoComplete='off' className='form-control' type="string" id='branchName' placeholder="Enter Branch Name" name="branchName"
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.branchName} />
-                                                {formik3.touched.branchName && formik3.errors.branchName ? <div className='text-danger'>{formik3.errors.branchName}</div> : null}
-
+                                                {formik3.touched.Vegan_NonVegan_Preference && formik3.errors.Vegan_NonVegan_Preference ?
+                                                    <div className='text-danger'>{formik3.errors.Vegan_NonVegan_Preference}</div>
+                                                    : null
+                                                }
                                             </div>
 
                                             <div className='col-md-6 mt-2'>
-                                                <label htmlFor='chicksCapacity'>Chicken Capacity</label>
-                                                <input autoComplete='off' className='form-control' type="number" id='chicksCapacity' placeholder="Chicken Capacity" name="chicksCapacity"
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.chicksCapacity} />
-                                                {formik3.touched.chicksCapacity && formik3.errors.chicksCapacity ? <div className='text-danger'>{formik3.errors.chicksCapacity}</div> : null}
+                                                <label htmlFor='WorkStatus_Preferences'>Work Status Preferences</label>
+                                                <Select
+                                                    isMulti
+                                                    name="WorkStatus_Preferences"
+                                                    options={options}
+                                                    className='basic-multi-select'
+                                                    classNamePrefix='select'
+                                                    onChange={(selectedOptions) => {
+                                                        formik3.setFieldValue('WorkStatus_Preferences', selectedOptions.map(option => option.value));
+                                                    }}
+                                                    onBlur={formik3.handleBlur}
+                                                    value={options.filter(option => formik3.values.WorkStatus_Preferences.includes(option.value))}
+                                                />
+                                                {formik3.touched.WorkStatus_Preferences && formik3.errors.WorkStatus_Preferences ? (
+                                                    <div className='text-danger'>{formik3.errors.WorkStatus_Preferences}</div>
+                                                ) : null}
                                             </div>
 
                                             <div className='col-md-6 mt-2'>
-                                                <label htmlFor='numberOfSheds'>No of Sheds </label>
-                                                <input autoComplete='off' className='form-control' type="number" id='numberOfSheds' placeholder="Enter numbers of Sheds" name="numberOfSheds"
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.numberOfSheds} />
-                                                {formik3.touched.numberOfSheds && formik3.errors.numberOfSheds ? <div className='text-danger'>{formik3.errors.numberOfSheds}</div> : null}
+                                                <label htmlFor='Alcohol_Preferences'>Alcohol Preferences</label>
+                                                <select autoComplete='off'
+                                                    className='form-select' type="text"
+                                                    id='Alcohol_Preferences' name="Alcohol_Preferences"
+                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.Alcohol_Preferences} >
+                                                    <option value={"No Preference"}>No Preference</option>
+                                                    <option value={"Social Drinker"}>Social Drinker</option>
+                                                    <option value={"Non-Drinker"}>Non-Drinker</option>
+                                                    <option value={"Occasional"}>Occasional</option>
+                                                </select>
+                                                {formik3.touched.Alcohol_Preferences && formik3.errors.Alcohol_Preferences ? <div className='text-danger'>{formik3.errors.Alcohol_Preferences}</div> : null}
                                             </div>
 
                                             <div className='col-md-6 mt-2'>
-                                                <label htmlFor='phoneNumber'>Phone</label>
-                                                <input autoComplete='off' className='form-control' type="string" id='phoneNumber' placeholder="03XXXXXXXXX" name="phoneNumber"
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.phoneNumber} />
-                                                {formik3.touched.phoneNumber && formik3.errors.phoneNumber ? <div className='text-danger'>{formik3.errors.phoneNumber}</div> : null}                                           </div>
-
-                                            <div className='col-md-6 mt-2'>
-                                                <label htmlFor='address'>Address</label>
-                                                <textarea rows="1" cols="3" autoComplete='off' className='form-control' type="string" id='address' placeholder="address" name="address" style={{ height: "37px" }}
-                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.address} />
-                                                {formik3.touched.address && formik3.errors.address ? <div className='text-danger'>{formik3.errors.address}</div> : null}
+                                                <label htmlFor='Noise_Preferences'>Noise Preferences</label>
+                                                <select autoComplete='off'
+                                                    className='form-select' type="text"
+                                                    id='Noise_Preferences' name="Noise_Preferences"
+                                                    onChange={formik3.handleChange} onBlur={formik3.handleBlur} value={formik3.values.Noise_Preferences} >
+                                                    <option value={"Quiet"}>Quiet</option>
+                                                    <option value={"Moderate"}>Moderate</option>
+                                                    <option value={"Loud"}>Loud</option>
+                                                </select>
+                                                {formik3.touched.Noise_Preferences && formik3.errors.Noise_Preferences ? <div className='text-danger'>{formik3.errors.Noise_Preferences}</div> : null}
                                             </div>
 
+                                            <div className={`col-md-6 mt-2`}>
+                                                <label htmlFor='Smoking_Preferences'>Smoking Preferences</label>
+
+                                                <div className="preference-container">
+                                                    <div
+                                                        className={`preference-box ${formik3.values.Smoking_Preferences === true ? "selected" : ""}`}
+                                                        onClick={() => formik3.setFieldValue('Smoking_Preferences', true)}
+                                                    >
+                                                        Smoker
+                                                    </div>
+                                                    <div
+                                                        className={`preference-box ${formik3.values.Smoking_Preferences === false ? "selected" : ""}`}
+                                                        onClick={() => formik3.setFieldValue('Smoking_Preferences', false)}
+                                                    >
+                                                        Non-Smoker
+                                                    </div>
+                                                </div>
+
+                                                {formik3.touched.Smoking_Preferences && formik3.errors.Smoking_Preferences ?
+                                                    <div className='text-danger'>{formik3.errors.Smoking_Preferences}</div>
+                                                    : null
+                                                }
+                                            </div>
+
+                                            <div className='col-md-6 mt-2'>
+                                                <label htmlFor='Age_Preferences'>Age_Preferences</label>
+
+                                                <InputGroup>
+                                                    <input
+                                                        autoComplete='off'
+                                                        className='form-control'
+                                                        type='number'
+                                                        id='Age_Preferences_min'
+                                                        placeholder='Enter minimum age'
+                                                        name='Age_Preferences.min'
+                                                        onChange={formik3.handleChange}
+                                                        onBlur={formik3.handleBlur}
+                                                        value={formik3.values.Age_Preferences.min}
+                                                    />
+                                                    <input
+                                                        autoComplete='off'
+                                                        className='form-control'
+                                                        type='number'
+                                                        id='Age_Preferences_max'
+                                                        placeholder='Enter maximum age'
+                                                        name='Age_Preferences.max'
+                                                        onChange={formik3.handleChange}
+                                                        onBlur={formik3.handleBlur}
+                                                        value={formik3.values.Age_Preferences.max}
+                                                    />
+                                                </InputGroup>
+
+
+                                                {/* Display errors for min and max separately */}
+                                                {(formik3.touched.Age_Preferences?.min && formik3.errors.Age_Preferences?.min) ||
+                                                    (formik3.touched.Age_Preferences?.max && formik3.errors.Age_Preferences?.max) ? (
+                                                    <div className='text-danger'>
+                                                        {formik3.touched.Age_Preferences?.min && formik3.errors.Age_Preferences?.min ? (
+                                                            <div>{formik3.errors.Age_Preferences.min}</div>
+                                                        ) : null}
+                                                        {formik3.touched.Age_Preferences?.max && formik3.errors.Age_Preferences?.max ? (
+                                                            <div>{formik3.errors.Age_Preferences.max}</div>
+                                                        ) : null}
+                                                    </div>
+                                                ) : null}
+                                            </div>
                                         </div>
                                     }
 
@@ -637,13 +727,13 @@ const Register = () => {
 
                                 </div>}
 
-                            {load && <div className='col-md-10 mt-4'>
+                            {load && <div className='col-md-10 mt-md-4'>
                                 <div className='row justify-content-center align-items-center' style={{ height: "20rem" }}>
-                                    <ConfigProvider theme={customTheme}>
-                                        <Spin tip="Registering user, please wait..." size="large">
-                                            &nbsp;
-                                        </Spin>
-                                    </ConfigProvider>
+
+                                    <Spin tip="Registering user, please wait..." size="large">
+                                        &nbsp;
+                                    </Spin>
+
                                 </div>
                             </div>}
 
