@@ -21,7 +21,7 @@ const Home = () => {
                 <div className='col-md-12 p-0'>
                     <div className='position-relative d-flex justify-content-center align-items-stretch overflow-hidden'>
                         <div className='position-absolute top-0 left-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center bg-dark text-light bg-opacity-25'>
-                            <h1>Welcome To Flatally</h1>
+                            <h1>Welcome To FlatAlly</h1>
                             <p className='text-center'>Online Portal where you can find your Perfect room Partner</p>
                         </div>
                         <div>

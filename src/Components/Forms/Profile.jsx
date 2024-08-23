@@ -27,7 +27,7 @@ const Profile = () => {
         "accountType": "Provider",
         "imageUrl": "",
         "gender": "Male",
-        "areaName": "Capitalcity",
+        "area": "Capitalcity",
     }
     let onSubmit = async (values) => {
 
@@ -50,7 +50,7 @@ const Profile = () => {
         }
 
         Obj.append('gender', values.gender);
-        Obj.append('areaName', values.areaName);
+        Obj.append('area', values.area);
 
         if (!userData && Object.keys(userData).length <= 0 && !userData._id) {
             //Post
@@ -92,7 +92,7 @@ const Profile = () => {
             .required('Required'),
         gender: Yup.string()
             .required('Required'),
-        areaName: Yup.string()
+        area: Yup.string()
             .required('Required'),
         userName: Yup.string()
             .trim() // Remove leading/trailing whitespace
@@ -132,7 +132,7 @@ const Profile = () => {
             setFieldValue("accountType", userData.accountType)
             // setFieldValue("imageUrl", userData.imageUrl)
             setFieldValue("gender", userData.gender)
-            // setFieldValue("areaName", userData.area_FK.areaName)
+            setFieldValue("area", userData.area_FK.areaName)
             // alert("fillValues")
 
             let Data = userData.imageUrl.replace('\\', '/');
@@ -260,10 +260,10 @@ const Profile = () => {
                                     </div>
                                     <div className='col-md-4'>
                                         <FormikInput
-                                            name="areaName"
-                                            placeholder="Area Name"
+                                            name="area"
+                                            placeholder="Area"
                                             variant="borderless"
-                                            label="Area Name"
+                                            label="Area"
                                             type="text"
                                             values={values}
                                             setFieldValue={setFieldValue}

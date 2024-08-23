@@ -474,7 +474,7 @@ const SearchBook = () => {
                                                                                 </div>
                                                                                 <div className="col-md-8">
                                                                                     <div className="card-body">
-                                                                                        <h5 className="card-title">{user.userName} Owns an Flat</h5>
+                                                                                        <h5 className="card-title">{user.userName} owens an Flat</h5>
                                                                                         <h5 className="card-title mt-1">Lives in {user.area_FK.areaName}</h5>
                                                                                         <div className="row">
                                                                                             <div className='col-4'>
